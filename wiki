@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from subprocess import call
+from os         import listdir
+from os.path    import isfile, join
+import glob
+import os
+import re
+import sys
+
+ARTICLE_LOCATION = "/usr/local/etc/wiki/articles"
+
+def read_article(file):
+    f     = open(file)
+    lines = f.read()
+    f.close()
+    return lines
+
+def edit_article(file):
+    call(["vim", file])
+
+def args_to_keyword_regex():
+    regex = ".+".join(sys.argv[1:])
+    print("regex: {}".format(regex))
+    return re.compile(regex)
+
+def match(text, regex):
+    return regex.match(text) != None
+
+def files(fs = [], dir = "."):
+   for d in glob.glob("{}/*".format(dir)):
+       isfile(d) and fs.append(d) or files(fs, d)
+   return fs
+
+def matched_files(regex):
+    return filter(lambda f: match(f, regex) == True, files())
+
+# article = "{}/sample".format(ARTICLE_LOCATION)
+
+regex = args_to_keyword_regex()
+
+for file in matched_files(regex):
+    print(file)
