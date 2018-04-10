@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+#
+# This scypt is for enabling managing the private/public
+# markdown wiki repository.
+#
+# author: Kei Sugano <tobasojyo@gmail.com>
+#
+
 from subprocess import call
 import glob
 import os
@@ -37,31 +44,42 @@ def matched_files(regex, root_dir):
     return filter(lambda f: match(f, regex) == True, files(root_dir))
 
 def int_input(input):
-    return int(input) - 1       
+    return match(input, re.compile("[0-9]+")) and int(input) - 1 or 0
 
 regex = args_to_keyword_regex()
 files = matched_files(regex, ARTICLE_LOCATION)
+
+def dispatch():
+    #
+    # display files
+    #
+    counter = 0
+    for file in files:
+        counter += 1
+        print("[{}] {}".format(counter, os.path.basename(file)))
+
+    input = raw_input("[l: launch s: save] > ")
+
+    if input == "":
+        print("")
+        dispatch()
+    elif input == "s":
+        os.system(
+        "cd {}; git init; git add .; git commit".format(ARTICLE_LOCATION)
+        )
+    elif input == "l":
+        #
+        # This part has to enable launching website article
+        #
+        print("")
+    elif int_input(input) + 1 > len(files):   
+        print("\nindex size out of range\n"); sys.exit()
+    else:
+        edit_article(files[int_input(input)])
 
 if len(files) == 0:
     edit_article("{}/{}".format(ARTICLE_LOCATION, args_to_article_name())) 
 elif len(files) == 1:
     edit_article(files[0]) 
 else:
-    counter = 0
-    for file in files:
-        counter += 1
-        print("[{}] {}".format(counter, file))
-
-    input = raw_input("[l: launch s: save] > ")
-
-    if input == "s":
-        os.system(
-            "cd {}; git init; git add .; git commit".format(ARTICLE_LOCATION)
-        )
-    elif input == "l":
-        # open markdown server
-        print("")
-    elif int_input(input) + 1 > len(files):   
-	print("\nindex size out of range\n"); sys.exit()
-    else:
-	edit_article(files[int_input(input)])
+    dispatch()
