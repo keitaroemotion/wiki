@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 from subprocess import call
-from os         import listdir
-from os.path    import isfile, join
 import glob
 import os
 import re
@@ -19,6 +17,9 @@ def read_article(file):
 def edit_article(file):
     call(["vim", file])
 
+def args_to_article_name():
+    return "_".join(sys.argv[1:])
+
 def args_to_keyword_regex():
     regex = ".+".join(sys.argv[1:])
     print("regex: {}".format(regex))
@@ -27,17 +28,40 @@ def args_to_keyword_regex():
 def match(text, regex):
     return regex.match(text) != None
 
-def files(fs = [], dir = "."):
+def files(dir, fs = []):
     for d in glob.glob("{}/*".format(dir)):
-        isfile(d) and fs.append(d) or files(fs, d)
+        os.path.isfile(d) and fs.append(d) or files(fs, d)
     return fs
 
-def matched_files(regex):
-    return filter(lambda f: match(f, regex) == True, files())
+def matched_files(regex, root_dir):
+    return filter(lambda f: match(f, regex) == True, files(root_dir))
 
-# article = "{}/sample".format(ARTICLE_LOCATION)
+def int_input(input):
+    return int(input) - 1       
 
 regex = args_to_keyword_regex()
+files = matched_files(regex, ARTICLE_LOCATION)
 
-for file in matched_files(regex):
-    print(file)
+if len(files) == 0:
+    edit_article("{}/{}".format(ARTICLE_LOCATION, args_to_article_name())) 
+elif len(files) == 1:
+    edit_article(files[0]) 
+else:
+    counter = 0
+    for file in files:
+        counter += 1
+        print("[{}] {}".format(counter, file))
+
+    input = raw_input("[l: launch s: save] > ")
+
+    if input == "s":
+        os.system(
+            "cd {}; git init; git add .; git commit".format(ARTICLE_LOCATION)
+        )
+    elif input == "l":
+        # open markdown server
+        print("")
+    elif int_input(input) + 1 > len(files):   
+	print("\nindex size out of range\n"); sys.exit()
+    else:
+	edit_article(files[int_input(input)])
