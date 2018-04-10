@@ -4,6 +4,7 @@
 # This scypt is for enabling managing the private/public
 # markdown wiki repository.
 #
+#
 # author: Kei Sugano <tobasojyo@gmail.com>
 #
 
@@ -17,7 +18,7 @@ ARTICLE_LOCATION = "/usr/local/etc/wiki/articles"
 
 def read_article(file):
     f     = open(file)
-    lines = f.read()
+    lines = f.readlines()
     f.close()
     return lines
 
@@ -46,10 +47,31 @@ def matched_files(regex, root_dir):
 def int_input(input):
     return match(input, re.compile("[0-9]+")) and int(input) - 1 or 0
 
+def links(file):
+    return [l.rstrip().replace("https://", "") for l in read_article(file)
+                                                     if match(l, re.compile("https:\/\/"))]
+
+def open_link(file):
+    print("")
+    counter = 0
+    _links = links(file)
+    for l in _links:
+        counter += 1
+        print("[{}] {}".format(counter, l))
+    if len(_links) == 0:
+        print("\nthere are no links\n")
+    else:
+        rinput = raw_input("> ")
+        if rinput == "q":
+            sys.exit()
+        input  = int_input(rinput)
+        print(_links[input])
+        call(["open", "https://" + _links[input]])
+
 regex = args_to_keyword_regex()
 files = matched_files(regex, ARTICLE_LOCATION)
 
-def dispatch():
+def dispatch(files):
     #
     # display files
     #
@@ -58,16 +80,23 @@ def dispatch():
         counter += 1
         print("[{}] {}".format(counter, os.path.basename(file)))
 
-    input = raw_input("[l: launch s: save] > ")
+    #
+    # menu:
+    #
+    input = raw_input("[u: launch s: save l: links q:quit] > ")
 
-    if input == "":
+    if input == "q":
+        sys.exit()
+    elif input == "":
         print("")
         dispatch()
     elif input == "s":
         os.system(
         "cd {}; git init; git add .; git commit".format(ARTICLE_LOCATION)
         )
-    elif input == "l":
+    elif match(input, re.compile("^l+$")):
+        open_link(files[0])
+    elif input == "u":
         #
         # This part has to enable launching website article
         #
@@ -76,10 +105,11 @@ def dispatch():
         print("\nindex size out of range\n"); sys.exit()
     else:
         edit_article(files[int_input(input)])
+    dispatch(files)
 
 if len(files) == 0:
     edit_article("{}/{}".format(ARTICLE_LOCATION, args_to_article_name())) 
 elif len(files) == 1:
     edit_article(files[0]) 
 else:
-    dispatch()
+    dispatch(files)
