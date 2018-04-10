@@ -88,14 +88,14 @@ def dispatch(files, article_name):
 
     if input == "n":
         edit_article("{}/{}".format(ARTICLE_LOCATION, article_name)) 
-    if input == "q":
+    elif input == "q":
         sys.exit()
     elif input == "":
         print("")
         dispatch(files, article_name)
     elif input == "s":
         os.system(
-        "cd {}; git init; git add .; git commit".format(ARTICLE_LOCATION)
+            "cd {}; git init; git add .; git commit".format(ARTICLE_LOCATION)
         )
     elif match(input, re.compile("^l+$")):
         open_link(files[0])
