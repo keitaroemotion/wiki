@@ -28,9 +28,9 @@ def match(text, regex):
     return regex.match(text) != None
 
 def files(fs = [], dir = "."):
-   for d in glob.glob("{}/*".format(dir)):
-       isfile(d) and fs.append(d) or files(fs, d)
-   return fs
+    for d in glob.glob("{}/*".format(dir)):
+        isfile(d) and fs.append(d) or files(fs, d)
+    return fs
 
 def matched_files(regex):
     return filter(lambda f: match(f, regex) == True, files())
