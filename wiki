@@ -36,13 +36,13 @@ def args_to_keyword_regex():
 def match(text, regex):
     return regex.match(text) != None
 
-def files(dir, fs = []):
+def get_files(dir, fs = []):
     for d in glob.glob("{}/*".format(dir)):
-        os.path.isfile(d) and fs.append(d) or files(fs, d)
+        os.path.isfile(d) and fs.append(d) or get_files(fs, d)
     return fs
 
 def matched_files(regex, root_dir):
-    return filter(lambda f: match(f, regex) == True, files(root_dir))
+    return filter(lambda f: match(f, regex) == True, get_files(root_dir))
 
 def int_input(input):
     return match(input, re.compile("[0-9]+")) and int(input) - 1 or 0
@@ -71,7 +71,7 @@ def open_link(file):
 regex = args_to_keyword_regex()
 files = matched_files(regex, ARTICLE_LOCATION)
 
-def dispatch(files):
+def dispatch(files, article_name):
     #
     # display files
     #
@@ -83,13 +83,16 @@ def dispatch(files):
     #
     # menu:
     #
-    input = raw_input("[u: launch s: save l: links q:quit] > ")
+    input = raw_input("[n: make article '{}', u: launch s: save l: links q:quit] > "
+                .format(article_name))
 
+    if input == "n":
+        edit_article("{}/{}".format(ARTICLE_LOCATION, article_name)) 
     if input == "q":
         sys.exit()
     elif input == "":
         print("")
-        dispatch()
+        dispatch(files, article_name)
     elif input == "s":
         os.system(
         "cd {}; git init; git add .; git commit".format(ARTICLE_LOCATION)
@@ -105,11 +108,20 @@ def dispatch(files):
         print("\nindex size out of range\n"); sys.exit()
     else:
         edit_article(files[int_input(input)])
-    dispatch(files)
+    dispatch(files, article_name)
+
+article_name = args_to_article_name()
 
 if len(files) == 0:
-    edit_article("{}/{}".format(ARTICLE_LOCATION, args_to_article_name())) 
+    files_selected = filter(lambda f: match(os.path.basename(f),
+                            re.compile(article_name)), get_files(ARTICLE_LOCATION))
+    files_selected = list(set(files_selected))
+    if len(files_selected) == 0:
+        edit_article("{}/{}".format(ARTICLE_LOCATION, article_name)) 
+    else:
+        dispatch(files_selected, article_name)
+
 elif len(files) == 1:
     edit_article(files[0]) 
 else:
-    dispatch(files)
+    dispatch(files, article_name)
