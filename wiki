@@ -23,7 +23,7 @@ def read_article(file):
     return lines
 
 def edit_article(file):
-    call(["vim", file])
+    call(["vim", file + ".md"])
 
 def args_to_article_name():
     return "_".join(sys.argv[1:])
